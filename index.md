@@ -1,5 +1,3 @@
-# ATACseq Analysis
-
 ## FastQC
 
 ## Bowtie2 and Samtools
