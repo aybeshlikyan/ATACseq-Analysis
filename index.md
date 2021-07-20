@@ -1,3 +1,5 @@
+{:toc}
+
 ## FastQC
 ```
 Version (on macOS Version 10.15.5 (19F101)):
@@ -129,7 +131,7 @@ samtools view -h -b -F 1804 -f 2 <name>_sorted_rmChrM_rmDup_rmMulti.bam > <name>
 samtools index <name>_sorted_filtered.bam
 ```
 
-## MACS2 and Blacklist Filtering
+## Peak-calling and Blacklist Filtering
 ### Version Information
 ```
 macs2 2.2.7.1
@@ -146,16 +148,22 @@ pip install macs2
 
 ### Peak-calling
 
-I followed [this useful guide by Yiwei Niu](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/#peak-calling-using-macs2).
+I originally followed [this useful guide by Yiwei Niu](https://yiweiniu.github.io/blog/2019/03/ATAC-seq-data-analysis-from-FASTQ-to-peaks/#peak-calling-using-macs2), but I changed the parameters according to [this Twitter thread by Xi Chen](https://twitter.com/XiChenUoM/status/1336658454866325506).
 
 ```bash
 #!/bin/bash
 
+# convert bam to bed
+bedtools bamtobed -i ../ATACseqQC/<name>/<name>_sorted_filtered_shifted.bam \
+    > <name>_simple.bed
+
 # start up virtual environment
 source ../../MACS2-env/bin/activate
 
-macs2 callpeak -f BAMPE -g hs --keep-dup all --cutoff-analysis -n <name> \
-    -t <name>_sorted_filtered_shifted.bam --outdir .\
+#peak calling  
+macs2 callpeak -f BED -g hs --shift -100 --extsize 200 --keep-dup all --cutoff-analysis \
+    -n <name> \
+    -t <name>_simple.bed --outdir .\
     2> Logs/<name>_macs2.log
 ```
 
@@ -176,8 +184,17 @@ bedtools intersect -v -a ${PEAK} -b ${BLACKLIST} \
   | grep -P 'chr[0-9XY]+(?!_)' > ${FILTERED_PEAK}
 ```
 
-## ChIPseeker - R Package
+## Annotation with ChIPseeker - R Package
 
-## DiffBind - R Package
+I followed [this guide](https://bioconductor.org/packages/release/bioc/vignettes/ChIPseeker/inst/doc/ChIPseeker.html) to run the ChIPseeker package.
+
+## Differential Analysis
+### DiffBind - R package
+
+I followed [this manual](https://bioconductor.org/packages/release/bioc/vignettes/DiffBind/inst/doc/DiffBind.pdf) to conduct differential analysis using the DiffBind package in 2 separate normalization methods: by library size and by reads in peaks.
+
+### CSAW - R package
+
+I followed the CSAW workflow proposed in [this paper](https://epigeneticsandchromatin.biomedcentral.com/articles/10.1186/s13072-020-00342-y) with 2 normalization methods: TMM and Loess.
 
 ## Browser Tracks
